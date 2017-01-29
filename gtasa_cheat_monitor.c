@@ -692,43 +692,41 @@ int WINAPI WinMain(HINSTANCE hIns, HINSTANCE hPrev, LPSTR lpszArgument, int nCmd
                               draw_label_box_offset(ctx, cheat_code, NK_TEXT_LEFT, nk_rgb(64, 0, 0), state.x, state.y);
                               nk_style_pop_color(ctx);
                           }
-                          // If out of screen stop animating
-                          if (state.x >= bounds.w) {
-                              animating[i] = 0;
+                          // Simple physics based movement
+                          float fx;
+                          if (GetTickCount() - change_t[i] < 6000) {
+                              // Slide in for 6s
+                              fx = -state.x / 10;
                           } else {
-                              // Simple physics based movement
-                              float fx;
-                              if (GetTickCount() - change_t[i] < 6000) {
-                                  // Slide in for 6s
-                                  fx = -state.x / 10;
-                              } else {
-                                  // Then slide out to the right
-                                  fx = (bounds.w - state.x) / 10;
-                              }
-                              // Some friction to dampen oscillations
-                              fx -= state.dx / 2;
-                              // Update speed and position
-                              state.dx += fx;
-                              state.x += state.dx;
-
-                              // If position changed due to line being
-                              // added or removed, reposition to match
-                              // previous position and do a smooth transition
-                              if (state.line != line) {
-                                  state.y = (state.line - line) * 28;
-                                  state.line = line;
-                              }
-
-                              // Gravitate towards 0 offset from current line
-                              float fy;
-                              fy = -state.y / 10;
-                              fy -= state.dy / 2;
-                              state.dy += fy;
-                              state.y += state.dy;
-
-                              anim_states[i] = state;
-                              SetTimer(hwnd, 0, 33, NULL);
+                              // Then slide out to the right
+                              fx = (bounds.w - state.x) / 10;
+                              // If out of screen stop animating
+                              if (state.x >= bounds.w) animating[i] = 0;
                           }
+                          // Some friction to dampen oscillations
+                          fx -= state.dx / 2;
+                          // Update speed and position
+                          state.dx += fx;
+                          state.x += state.dx;
+
+                          // If position changed due to line being
+                          // added or removed, reposition to match
+                          // previous position and do a smooth transition
+                          if (state.line != line) {
+                              state.y = (state.line - line) * 28;
+                              state.line = line;
+                          }
+
+                          // Gravitate towards 0 offset from current line
+                          float fy;
+                          fy = -state.y / 10;
+                          fy -= state.dy / 2;
+                          state.dy += fy;
+                          state.y += state.dy;
+
+                          anim_states[i] = state;
+                          SetTimer(hwnd, 0, 33, NULL);
+
                           line++;
                       }
                     }
