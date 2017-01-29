@@ -323,7 +323,7 @@ unsigned char typed[30];
 struct typed_code { char str[31]; };
 struct typed_code typed_codes[NUM_CHEATS];
 
-struct typed_code search_typed_for_cheat(unsigned char cheat_id) {
+void search_typed_for_cheat(unsigned char cheat_id) {
     struct typed_code code;
     DWORD target_crc = get_cheat_crc(cheat_id);
 
@@ -336,7 +336,7 @@ struct typed_code search_typed_for_cheat(unsigned char cheat_id) {
     for(start_i = 0; start_i < sizeof(typed); start_i++)
         if (typed[start_i] == 0) goto cont;
     // cheat code not found
-    goto err;
+    goto not_found;
 
     // end_i points beyond the end of the buffer or to the previous
     // cheat code, whatever comes first
@@ -367,13 +367,14 @@ cont:
             code.str[cheat_len-1] = tolower(chars[char_i]);
             for(unsigned char typed_i = start_i+1; typed_i < start_i + cheat_len; typed_i++)
                 code.str[start_i + cheat_len - 1 - typed_i] = tolower(typed[typed_i]);
-            return code;
+            typed_codes[cheat_id] = code;
+            return;
         }
     }
-err:
+not_found:
     // cheat not found for some reason
-    snprintf(code.str, sizeof(code.str), "?");
-    return code;
+    if (strcmp(typed_codes[cheat_id].str, "") == 0)
+        sprintf(typed_codes[cheat_id].str, "?");
 }
 
 DWORD WINAPI dc_thread(LPVOID lpParameter) {
@@ -389,7 +390,7 @@ DWORD WINAPI dc_thread(LPVOID lpParameter) {
             char changed_cheats = 0;
             for(unsigned char i = 0; i < NUM_CHEATS; i++) {
                 if (cur_cheats[i] != cheats[i]) {
-                    typed_codes[i] = search_typed_for_cheat(i);
+                    search_typed_for_cheat(i);
                     cur_cheats[i] = cheats[i];
                     changed_cheats++;
                 }
